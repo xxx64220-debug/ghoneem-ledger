@@ -31,3 +31,21 @@ for(const fn of ['home','studentList','studentPage','groups','sessionsPage','exp
 run("selected='g'");assert.ok(run('groupPage()').includes('SAT Saturday'));
 assert.ok(run("statement(D.students[0],'2026-10-01','2026-09-01')").includes('valid date range'));
 console.log('PASS: report totals, refunds, separate spending, negative credits, date-range statements, Arabic/injection escaping and all main renderers.');
+assert.equal(run("positiveAmount('0.10')"),0.1);
+for(const amount of ['0','-1','1.234','Infinity','1e3',''])assert.throws(()=>run(`positiveAmount(${JSON.stringify(amount)})`));
+run(`D.payments=[{id:'p1',student_id:'s',amount:1000,paid_on:'2026-09-01',method:'cash'},{id:'p2',student_id:'s',amount:400,paid_on:'2026-09-05',method:'cash'},{id:'p3',student_id:'s',amount:-100,paid_on:'2026-09-06',method:'cash'}];D.charges=[{id:'c1',student_id:'s',amount:600,charged_on:'2026-09-02',reason:'adjustment',note:'Lesson'},{id:'c2',student_id:'s',amount:700,charged_on:'2026-09-03',reason:'adjustment',note:'Lessons'}];`);
+assert.deepEqual(JSON.parse(run("JSON.stringify(studentHistory('s').map(r=>r.balance))")),[1000,400,-300,100,0],'Advance consumed, debt carried forward, later payment and refund');
+assert.equal(run("metrics('2026-09').collected"),1300,'Charges do not count as collected money');
+assert.ok(run('quickMoney()').includes('Recorded money left'));
+assert.ok(run("studentTransactions('s')").includes('Settled'));
+// Exercise the actual save handlers without touching real financial records.
+run(`let captured,writes=[];modal=(title,fields,save)=>{captured={title,fields,save}};insert=async(table,row)=>writes.push({table,row});`);
+(async()=>{
+ for(const [kind,expectedTable,expectedAmount] of [['payment','payments',250],['refund','payments',-250],['charge','charges',250]]){
+  await run(`action('${kind}',{dataset:{id:'s'}})`);
+  await run(`captured.save({student_id:'s',amount:'250',note:'Test',paid_on:'2026-09-26'})`);
+  assert.equal(run('writes.at(-1).table'),expectedTable);assert.equal(run('writes.at(-1).row.amount'),expectedAmount);
+ }
+ assert.equal(run('writes.at(-1).row.reason'),'adjustment');
+ console.log('PASS: advance → lesson → debt → partial/later payment → refund; positive input validation; actual payment/refund/charge save handlers.');
+})().catch(e=>{console.error(e);process.exitCode=1;});
