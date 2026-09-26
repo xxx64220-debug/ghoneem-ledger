@@ -49,3 +49,13 @@ run(`let captured,writes=[];modal=(title,fields,save)=>{captured={title,fields,s
  assert.equal(run('writes.at(-1).row.reason'),'adjustment');
  console.log('PASS: advance → lesson → debt → partial/later payment → refund; positive input validation; actual payment/refund/charge save handlers.');
 })().catch(e=>{console.error(e);process.exitCode=1;});
+run("D.students[0].session_rate=250;D.students[0].session_counter_used=2");
+assert.equal(run('sessionCounter(D.students[0]).paid'),1300);
+assert.equal(run('sessionCounter(D.students[0]).total'),5.2);
+assert.equal(run('sessionCounter(D.students[0]).whole'),3);
+assert.equal(run('sessionCounter(D.students[0]).leftover'),50);
+assert.equal(run('sessionCounter(D.students[0],100,2).remaining'),11,'Editing rate recalculates coverage');
+assert.ok(run('sessionCounter(D.students[0],250,6).remaining')<0,'Used sessions can exceed payments');
+assert.equal(run('sessionCounter(D.students[0],0)'),null);
+assert.ok(run('counterCard(D.students[0])').includes('Edit rate / count'));
+console.log('PASS: editable session rate, refunds, fractional coverage, remaining credit, uncovered sessions and missing-rate handling.');
