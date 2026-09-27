@@ -5,7 +5,7 @@ const OWNER='2caeaaaa-ae3c-45b9-8868-8b562d344622';
 const TABLES=new Set(['students','groups','enrollments','sessions','attendance','packages','charges','payments','expense_categories','expenses','recurring_expenses','settings','student_balances','package_status']);
 const INSERTS=new Set(['students','groups','enrollments','sessions','charges','payments','expense_categories','expenses','recurring_expenses','settings']);
 const UPDATES=new Set(['students','groups','enrollments','expense_categories','recurring_expenses','settings']);
-const RPCS=new Set(['record_attendance','cancel_session','sell_package','generate_monthly_charges','generate_recurring_expenses']);
+const RPCS=new Set(['assign_entry','record_attendance','cancel_session','sell_package','generate_monthly_charges','generate_recurring_expenses']);
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function out(message:string,status=400){return Response.json({message},{status,headers:{'Cache-Control':'no-store'}})}
 export async function handler(req:Request){
